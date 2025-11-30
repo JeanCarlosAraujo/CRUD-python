@@ -96,7 +96,7 @@ def get_user_by_id(user_id):
     if conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT id, nombre, fecha_nacimiento, password_hash FROM users WHERE id = ?", (user_id,))
+            cursor.execute("SELECT id, tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento, correo, password_hash FROM users WHERE id = ?", (user_id,))
             user = cursor.fetchone()
             return user
         except mariadb.Error as e:
@@ -106,7 +106,7 @@ def get_user_by_id(user_id):
             cursor.close()
             conn.close()
 
-def update_user(user_id, nombre, fecha_nacimiento, password=None):
+def update_user(user_id, tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento, correo, password=None):
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
@@ -114,13 +114,13 @@ def update_user(user_id, nombre, fecha_nacimiento, password=None):
             if password:
                 hashed_password = hash_password(password)
                 cursor.execute(
-                    "UPDATE users SET nombre = ?, fecha_nacimiento = ?, password_hash = ? WHERE id = ?",
-                    (nombre, fecha_nacimiento, hashed_password, user_id)
+                    "UPDATE users SET tipo_id = ?, nombre = ?, apellido = ?, direccion = ?, telefono = ?,  fecha_nacimiento = ?, correo = ?, password_hash = ? WHERE id = ?",
+                    (tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento, correo, hashed_password, user_id)
                 )
             else:
                 cursor.execute(
-                    "UPDATE users SET nombre = ?, fecha_nacimiento = ? WHERE id = ?",
-                    (nombre, fecha_nacimiento, user_id)
+                    "UPDATE users SET tipo_id = ?, nombre = ?, apellido = ?, direccion = ?, telefono = ?,  fecha_nacimiento = ?, correo = ? WHERE id = ?",
+                    (tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento, correo, user_id)
                 )
             conn.commit()
             messagebox.showinfo("Éxito", "Usuario actualizado correctamente.")
@@ -203,10 +203,10 @@ class UserApp:
         button_frame = tk.Frame(input_frame)
         button_frame.grid(row=9, column=0, columnspan=2, pady=10)
 
-        tk.Button(button_frame, text="Crear Usuario", command=self.add_user).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Actualizar Usuario", command=self.update_selected_user).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Eliminar Usuario", command=self.delete_selected_user).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Limpiar Campos", command=self.clear_fields).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Crear Usuario", command=self.add_user, bg="blue", fg="white").pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Actualizar Usuario", command=self.update_selected_user, bg="blue", fg="white").pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Eliminar Usuario", command=self.delete_selected_user, bg="blue", fg="white").pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Limpiar Campos", command=self.clear_fields, bg="blue", fg="white").pack(side=tk.LEFT, padx=5)
         # --- Botón para salir ---
         tk.Button(button_frame, text="Salir", command=self.master.destroy, bg="red", fg="white").pack(side=tk.RIGHT, padx=15)
 
@@ -268,8 +268,13 @@ class UserApp:
             return
 
         user_id = self.tree.item(selected_item)['values'][0]
+        tipo_id = self.tipo_id_entry.get().strip()
         nombre = self.nombre_entry.get().strip()
+        apellido = self.apellido_entry.get().strip()
+        direccion = self.direccion_entry.get().strip()
+        telefono = self.telefono_entry.get().strip()
         fecha_nacimiento_str = self.fecha_nacimiento_entry.get_date().strftime('%Y-%m-%d')
+        correo = self.correo_entry.get().strip()
         password = self.password_entry.get() # Obtener la nueva contraseña (si se ingresó)
 
         if not nombre or not fecha_nacimiento_str:
@@ -277,11 +282,11 @@ class UserApp:
             return
 
         if password:
-            if update_user(user_id, nombre, fecha_nacimiento_str, password):
+            if update_user(user_id, tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento_str, correo, password):
                 self.load_users()
                 self.clear_fields()
         else:
-            if update_user(user_id, nombre, fecha_nacimiento_str):
+            if update_user(user_id, tipo_id, nombre, apellido, direccion, telefono, fecha_nacimiento_str, correo):
                 self.load_users()
                 self.clear_fields()
 
